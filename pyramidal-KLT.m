@@ -407,7 +407,8 @@ With[{reg=ConvexHullMesh@flowfield[[All,1]]},
 ListVectorPlot[flowfield,VectorColorFunction->"Rainbow",VectorPoints->Fine,
 RegionFunction->Function[{x,y,xu,yv},RegionMember[reg,{x,y}]],VectorScale->vecscale]
 ],
-Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0}, {-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
+Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0},
+{-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
 ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],ImageSize->imgsize];
 
 If[trim,
@@ -429,7 +430,8 @@ With[{reg=ConvexHullMesh@flowfield[[All,1]]},
 ListVectorPlot[flowfield,VectorColorFunction->"Rainbow",VectorPoints->Fine,
 RegionFunction->Function[{x,y,xu,yv},RegionMember[reg,{x,y}]],VectorScale->vecscale]
 ],
-Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0}, {-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
+Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0}, {-1, Rational[-1, 2]},
+{-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
 ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],
 ImageSize->imgsize]
 ];
