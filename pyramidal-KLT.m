@@ -66,19 +66,10 @@ interp
 ];
 
 
-pyrLK::description="pyrLK tracks'features' from images in pyr1 to pyr2. pt0 contains the features to track. winsize is the size
-of the window to estimate local gradient. iterate at most maxIter times per pyramid level or stop if convergence is less than 
-the stop threshold (in pixels). winsize, maxiter and threshold can be scalars or vectors with a different value for each pyramid
-level.
+pyrLK::description="pyrLK tracks 'features' from images in pyr1 to pyr2 (pyramids). features contains the features to track.
+winsize is the size of the window to estimate local gradient. We iterate at most maxIter for each pyramid level or halt if
+convergence criteria is met i.e. < some limit (in pixels)";
 
-Output:
-speed -> estimated speed of features (in lower pyramid image)
-failure -> tracking failure
-error -> final difference of pixel color.
-
-'failure' is an array containing 2 counts of failures for each particle. The first is the number of times LK has failed due to a
-weak gradient of color intensity in the area around the features. The second is the number of times it has been tracked out of the
-image and forced back inside, or lost due to algorithmic failure (this should not happen anymore, otherwise warnings are displayed)";
 pyrLK[{pyr1_,pyr1x_,pyr1y_},{pyr2_,pyr2x_,pyr2y_},mask_,features_,winsize_:5,maxIter_:2,threshold_:0.5]:=Block[{pyrNum,
 windowSize=winsize,thresh=threshold,maxiter=maxIter,pts0=features,pts,sp,ds,warn,img1,img2,Px,Py,count,r,ldspl,Sdsp,feature,
 featureNa,featureNb,A,a,B,b,dsp,II,revdsp,ind,ind2,dsval,dim,interpFuncX,interpFuncY,mesh,ptsToForceBack,meshg,nearestFunc,
