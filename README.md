@@ -4,6 +4,8 @@ region.
 
 `VectorFieldOperations.m` contains functions for computing velocity gradients and strain-rate from velocity-fields
 
+The Mathematica implementation of the strain-rate measure of the flow field is based on an approach used by Sham Tlili
+
 #### Note: 
 ##### `pyramidal-KLT-allmethods.m` is a merger of the two script files
 
