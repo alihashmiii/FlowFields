@@ -1,6 +1,7 @@
 @Author: `Ali Hashmi`
 
-credits: `Sham Tlili` for the strain-rate measure 
+credits: `Sham Tlili` for the strain-rate measure
+
 `J.M` (stack exchange) for `getEigenSystem` implementation (I used it rather than the built-in `EigenSystem` function)
 
 ___
