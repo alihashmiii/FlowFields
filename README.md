@@ -1,4 +1,4 @@
-**@Author: `Ali Hashmi`
+**@Author: `Ali Hashmi`**
 
 credits: `Sham Tlili` for the strain-rate measure
 
