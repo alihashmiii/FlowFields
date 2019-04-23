@@ -2,7 +2,7 @@
 
 credits: `Sham Tlili` for the strain-rate measure 
 
-         `J.M` (stack exchange) for `getEigenSystem` implementation (I used it rather than the built-in `EigenSystem` function)
+`J.M` (stack exchange) for `getEigenSystem` implementation (I used it rather than the built-in `EigenSystem` function)
 
 
 The script `pyramidal-KLT.m` is based on a pyramidal implementaion of Lucas Kanade motion tracking algorithm. It can be used
