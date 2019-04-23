@@ -17,5 +17,7 @@ region.
 `pyramidal-KLT-allmethods.m` is a merger of the two script files
 
 
+<img src="https://github.com/alihashmiii/flow-fields/blob/master/for%20Readme/plot.png">
 
 ![alt text](https://github.com/alihashmiii/flow-fields/blob/master/for%20Readme/plot.png)
+
