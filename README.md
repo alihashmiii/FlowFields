@@ -19,5 +19,3 @@ region.
 
 <img src="https://github.com/alihashmiii/flow-fields/blob/master/for%20Readme/plot.png">
 
-![alt text](https://github.com/alihashmiii/flow-fields/blob/master/for%20Readme/plot.png)
-
