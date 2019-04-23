@@ -1,8 +1,10 @@
 **@Author: `Ali Hashmi`**
 
-credits: `Sham Tlili` for the strain-rate measure
+credits: `Sham Tlili` for the strain-rate measure. 
+##### The associated Mathematica functions for strain-rate measure are translations of her Matlab code
 
-`J.M` (stack exchange) for `getEigenSystem` implementation (I used it rather than the built-in `EigenSystem`)
+`J.M` (stack exchange) for `getEigenSystem` implementation 
+##### I used it rather than the built-in `EigenSystem`
 
 ___
 
