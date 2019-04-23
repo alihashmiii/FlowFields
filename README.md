@@ -4,5 +4,6 @@ region.
 
 `VectorFieldOperations.m` contains functions for computing velocity gradients and strain-rate from velocity-fields
 
-## Note: #### `pyramidal-KLT-allmethods.m` is a merger of the two script files
+#### Note: 
+##### `pyramidal-KLT-allmethods.m` is a merger of the two script files
 
