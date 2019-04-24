@@ -27,21 +27,21 @@ diff/div
 velocityGrad[dgrad_,vectorfield_]:=Module[{pts,vel,xmin,xmax,ymin,ymax,array,grid,
 ux,vx,uy,vy,DVxx,DVyx,DVxy,DVyy,DVww,trace},
 {pts,vel}=Transpose[vectorfield];
-{xmin,xmax}=MinMax@pts[[All,1]];
-{ymin,ymax}=MinMax@pts[[All,2]];
-array = meshgrid[Range[xmin,xmax,dgrad],Range[ymin,ymax,dgrad]];
+{ymin,ymax}=MinMax@pts[[All,1]];
+{xmin,xmax}=MinMax@pts[[All,2]];
+array = meshgrid[Range[ymin,ymax,dgrad],Range[xmin,xmax,dgrad]];
 grid = Replace[Replace[array,Dispatch[Thread[pts -> vel]],{2}],{__Integer}->{0,0},{2}];
-ux = grad[Unevaluated[x],grid[[All,All,1]],dgrad];
-vx = grad[Unevaluated[x],grid[[All,All,2]],dgrad];
-uy = grad[Unevaluated[y],grid[[All,All,1]],dgrad];
-vy = grad[Unevaluated[y],grid[[All,All,2]],dgrad];
+ux = grad[Unevaluated[x],grid[[All,All,2]],dgrad];
+vx = grad[Unevaluated[x],grid[[All,All,1]],dgrad];
+uy = grad[Unevaluated[y],grid[[All,All,2]],dgrad];
+vy = grad[Unevaluated[y],grid[[All,All,1]],dgrad];
 DVxx = ux/. 0-> None;
 DVyx = DVxy =((uy+vx)/2)/. 0 -> None;
 DVyy = vy/. 0 -> None;
 DVww = (-uy+vx)/. 0 -> None; (*rotation*)
 trace = (DVxx+DVyy)/2;
-Print[MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyx,DVyy,DVww,trace}/. None -> 0)];
-{DVxx,DVyy,DVxy,DVyx,DVww,trace,array}
+Print[MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/. None -> 0)];
+{DVxx,DVyy,DVyx,DVxy,DVww,trace,array}
 ];
 
 
@@ -96,8 +96,8 @@ makeVecs[ev,rv,1,rQ];{ev,rv}]
 ];
 
 
-SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,vp1,val1,ind1,
-\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
+SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,
+vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
 pos=SparseArray[(DVxx*DVyy*DVxy)/.None->0]["NonzeroPositions"];
 
 Do[
@@ -111,7 +111,7 @@ vp1 = Diagonal[eVa];
 \[Phi] = ArcTan[eVe[[2,ind1[[2]] ]]/eVe[[1,ind1[[2]] ]]];
 rvect ={eVe[[1,ind1[[2]] ]],eVe[[2,ind1[[2]] ]]};
 speed=vectorfield[[All,2]];
-anglevelmean = 45 Degree; (* angle from polarization code maybe used instead*)
+anglevelmean = \[Theta]; (* angle from polarization code maybe used instead*)
 rotationTrans = RotationTransform[anglevelmean];
 rvectTurned = rotationTrans[rvect];
 scalar = Abs[First@rvectTurned];
@@ -120,18 +120,18 @@ maxDv = eVa[[1,1]]~Max~eVa[[2,2]];
 Tracee =(DVxx[[Sequence@@i]]+DVyy[[Sequence@@i]])/2;
 
 Block[{prim},
-If[Abs[minDv]*Abs[maxDv]>0,
-prim = GeometricTransformation[Circle[array[[Sequence@@i]],{Round[1000 Abs[Tracee]],0}],
-RotationTransform[\[Phi],array[[Sequence@@i]]] ];
+ If[Abs[minDv]*Abs[maxDv]>0,
+ prim = GeometricTransformation[Circle[array[[Sequence@@i]],{Round[scale1 Abs[Tracee]],0}],
+ RotationTransform[\[Phi],array[[Sequence@@i]]] ];
 
-If[Tracee>0,
-AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.33]]],
-AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.33]]]
+ If[Tracee>0,
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.33]]],
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.33]]]
 ];
 
-AppendTo[graphicsPrimitive, {GrayLevel[0.1],
- GeometricTransformation[ Circle[array[[Sequence@@i]],{Round[360*maxDv],Round[Abs[360*minDv]]}],
-RotationTransform[\[Phi],array[[Sequence@@i]]]]}]
+ AppendTo[graphicsPrimitive, {GrayLevel[0.1],
+  GeometricTransformation[ Circle[array[[Sequence@@i]],{Round[scale2*maxDv],Round[Abs[scale2*minDv]]}],
+ RotationTransform[\[Phi],array[[Sequence@@i]]]]}]
   ]
  ]
 ],{i,pos}];
