@@ -96,8 +96,9 @@ makeVecs[ev,rv,1,rQ];{ev,rv}]
 ];
 
 
-SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,
-vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
+SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},
+pos,DV,eVa,eVe,vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
+
 pos=SparseArray[(DVxx*DVyy*DVxy)/.None->0]["NonzeroPositions"];
 
 Do[
