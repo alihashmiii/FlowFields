@@ -4,9 +4,23 @@
 (*Velocity Gradient \[Del] *)
 
 
+(*None Type Arithmetic Rules *)
+Unprotect[None,Power];
+None/:Subtract[None,None]:=None;
+None/:Subtract[None,_Real|_Integer]:=None;
+None/:Subtract[_Real|_Integer,None]:=None;
+None/:Plus[None,-None]:=None;
+None/:Plus[None,_Real|_Integer]:=None;
+None/:Times[Rational[_,_],None]:=None;
+None/:Times[_Integer|_Real,None]:=None;
+None/:Times[None,None]:=None;
+Power/:Times[_,Power[None,_]]:=None;
+Protect[None,Power];
+
+
 Unevaluated[x]/:grad[Unevaluated[x],array_,div_]:=Block[{arr,nx,ny,diffL,diffR,diff},
 {nx,ny}={#[[1]],#[[2]]}&[Dimensions[array]];
-arr=PadLeft[PadRight[array,{nx,ny+1}],{nx,ny+2}];
+arr=PadLeft[PadRight[array,{nx,ny+1},None],{nx,ny+2},None];
 diffL=arr[[All,2;;ny+1]]-arr[[All,1;;ny]];
 diffR=arr[[All,3;;ny+2]]-arr[[All,2;;ny+1]];
 diff=(diffL+diffR)/2;
@@ -16,7 +30,7 @@ diff/div
 
 Unevaluated[y]/:grad[Unevaluated[y],array_,div_]:=Block[{arr,nx,ny,diffL,diffR,diff},
 {nx,ny}={#[[1]],#[[2]]}&[Dimensions[array]];
-arr=PadLeft[PadRight[array,{nx+1,ny}],{nx+2,ny}];
+arr=PadLeft[PadRight[array,{nx+1,ny},None],{nx+2,ny},None];
 diffL=arr[[2;;nx+1,All]]-arr[[1;;nx,All]];
 diffR=arr[[3;;nx+2,All]]-arr[[2;;nx+1,All]];
 diff=(diffL+diffR)/2;
@@ -30,15 +44,15 @@ ux,vx,uy,vy,DVxx,DVyx,DVxy,DVyy,DVww,trace},
 {ymin,ymax}=MinMax@pts[[All,1]];
 {xmin,xmax}=MinMax@pts[[All,2]];
 array = meshgrid[Range[ymin,ymax,dgrad],Range[xmin,xmax,dgrad]];
-grid = Replace[Replace[array,Dispatch[Thread[pts -> vel]],{2}],{__Integer}->{0,0},{2}];
+grid = Replace[Replace[array,Dispatch[Thread[pts -> vel]],{2}],{__Integer}->{None,None},{2}];
 ux = grad[Unevaluated[x],grid[[All,All,2]],dgrad];
 vx = grad[Unevaluated[x],grid[[All,All,1]],dgrad];
 uy = grad[Unevaluated[y],grid[[All,All,2]],dgrad];
 vy = grad[Unevaluated[y],grid[[All,All,1]],dgrad];
-DVxx = ux/. 0-> None;
-DVyx = DVxy =((uy+vx)/2)/. 0 -> None;
-DVyy = vy/. 0 -> None;
-DVww = (-uy+vx)/. 0 -> None; (*rotation*)
+DVxx = ux;
+DVyx = DVxy =(uy+vx)/2;
+DVyy = vy;
+DVww = (-uy+vx); (*rotation*)
 trace = (DVxx+DVyy)/2;
 Print[MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/. None -> 0)];
 {DVxx,DVyy,DVyx,DVxy,DVww,trace,array}
@@ -47,20 +61,6 @@ Print[MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVy
 
 (* ::Section:: *)
 (*Strain Rate Measures*)
-
-
-(*None Type Arithmetic Rules *)
-Unprotect[None,Power];
-None/:Subtract[None,None]:=None;
-None/:Subtract[None,_Real|_Integer]:=None;
-None/:Subtract[_Real|_Integer,None]:=None;
-None/:Plus[None,-None]:=None;
-None/:Plus[None,_Real|_Integer]:=None;
-None/:Times[Rational[_,_],None]:=None;
-None/:Times[_Integer|_Real,None]:=None;
-None/:Times[None,None]:=None;
-Power/:Times[_,Power[None,_]]:=None;
-Protect[None,Power];
 
 
 SetAttributes[makeVecs,HoldAll];
@@ -96,9 +96,8 @@ makeVecs[ev,rv,1,rQ];{ev,rv}]
 ];
 
 
-SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},
-pos,DV,eVa,eVe,vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
-
+SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,
+vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
 pos=SparseArray[(DVxx*DVyy*DVxy)/.None->0]["NonzeroPositions"];
 
 Do[
@@ -126,12 +125,12 @@ Block[{prim},
  RotationTransform[\[Phi],array[[Sequence@@i]]] ];
 
  If[Tracee>0,
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.33]]],
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.33]]]
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.65]]],
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.65]]]
 ];
 
- AppendTo[graphicsPrimitive, {GrayLevel[0.1],
-  GeometricTransformation[ Circle[array[[Sequence@@i]],{Round[scale2*maxDv],Round[Abs[scale2*minDv]]}],
+ AppendTo[graphicsPrimitive, {GrayLevel[0.2],
+  GeometricTransformation[Circle[array[[Sequence@@i]],{Round[scale2*maxDv],Round[Abs[scale2*minDv]]}],
  RotationTransform[\[Phi],array[[Sequence@@i]]]]}]
   ]
  ]
