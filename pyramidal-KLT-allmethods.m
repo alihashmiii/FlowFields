@@ -224,53 +224,10 @@ movingAvgFlowField[flowfield_,block_:5,trans_:1]:=BlockMap[
  Normal@GroupBy[Flatten[Thread/@#,1],First->Last,Mean]/.Rule ->List &,
 flowfield,block,trans];
 
+
+
 (* ::Section:: *)
 (*Velocity Gradient \[Del] *)
-
-
-Unevaluated[x]/:grad[Unevaluated[x],array_,div_]:=Block[{arr,nx,ny,diffL,diffR,diff},
-{nx,ny}={#[[1]],#[[2]]}&[Dimensions[array]];
-arr=PadLeft[PadRight[array,{nx,ny+1}],{nx,ny+2}];
-diffL=arr[[All,2;;ny+1]]-arr[[All,1;;ny]];
-diffR=arr[[All,3;;ny+2]]-arr[[All,2;;ny+1]];
-diff=(diffL+diffR)/2;
-diff/div
-];
-
-
-Unevaluated[y]/:grad[Unevaluated[y],array_,div_]:=Block[{arr,nx,ny,diffL,diffR,diff},
-{nx,ny}={#[[1]],#[[2]]}&[Dimensions[array]];
-arr=PadLeft[PadRight[array,{nx+1,ny}],{nx+2,ny}];
-diffL=arr[[2;;nx+1,All]]-arr[[1;;nx,All]];
-diffR=arr[[3;;nx+2,All]]-arr[[2;;nx+1,All]];
-diff=(diffL+diffR)/2;
-diff/div
-];
-
-
-velocityGrad[dgrad_,vectorfield_]:=Module[{pts,vel,xmin,xmax,ymin,ymax,array,grid,
-ux,vx,uy,vy,DVxx,DVyx,DVxy,DVyy,DVww,trace},
-{pts,vel}=Transpose[vectorfield];
-{ymin,ymax}=MinMax@pts[[All,1]];
-{xmin,xmax}=MinMax@pts[[All,2]];
-array = meshgrid[Range[ymin,ymax,dgrad],Range[xmin,xmax,dgrad]];
-grid = Replace[Replace[array,Dispatch[Thread[pts -> vel]],{2}],{__Integer}->{0,0},{2}];
-ux = grad[Unevaluated[x],grid[[All,All,2]],dgrad];
-vx = grad[Unevaluated[x],grid[[All,All,1]],dgrad];
-uy = grad[Unevaluated[y],grid[[All,All,2]],dgrad];
-vy = grad[Unevaluated[y],grid[[All,All,1]],dgrad];
-DVxx = ux/. 0-> None;
-DVyx = DVxy =((uy+vx)/2)/. 0 -> None;
-DVyy = vy/. 0 -> None;
-DVww = (-uy+vx)/. 0 -> None; (*rotation*)
-trace = (DVxx+DVyy)/2;
-Print[MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/. None -> 0)];
-{DVxx,DVyy,DVyx,DVxy,DVww,trace,array}
-];
-
-
-(* ::Section:: *)
-(*Strain Rate Measures*)
 
 
 (*None Type Arithmetic Rules *)
@@ -285,6 +242,51 @@ None/:Times[_Integer|_Real,None]:=None;
 None/:Times[None,None]:=None;
 Power/:Times[_,Power[None,_]]:=None;
 Protect[None,Power];
+
+
+Unevaluated[x]/:grad[Unevaluated[x],array_,div_]:=Block[{arr,nx,ny,diffL,diffR,diff},
+{nx,ny}={#[[1]],#[[2]]}&[Dimensions[array]];
+arr=PadLeft[PadRight[array,{nx,ny+1},None],{nx,ny+2},None];
+diffL=arr[[All,2;;ny+1]]-arr[[All,1;;ny]];
+diffR=arr[[All,3;;ny+2]]-arr[[All,2;;ny+1]];
+diff=(diffL+diffR)/2;
+diff/div
+];
+
+
+Unevaluated[y]/:grad[Unevaluated[y],array_,div_]:=Block[{arr,nx,ny,diffL,diffR,diff},
+{nx,ny}={#[[1]],#[[2]]}&[Dimensions[array]];
+arr=PadLeft[PadRight[array,{nx+1,ny},None],{nx+2,ny},None];
+diffL=arr[[2;;nx+1,All]]-arr[[1;;nx,All]];
+diffR=arr[[3;;nx+2,All]]-arr[[2;;nx+1,All]];
+diff=(diffL+diffR)/2;
+diff/div
+];
+
+
+velocityGrad[dgrad_,vectorfield_]:=Module[{pts,vel,xmin,xmax,ymin,ymax,array,grid,
+ux,vx,uy,vy,DVxx,DVyx,DVxy,DVyy,DVww,trace},
+{pts,vel}=Transpose[vectorfield];
+{ymin,ymax}=MinMax@pts[[All,1]];
+{xmin,xmax}=MinMax@pts[[All,2]];
+array = meshgrid[Range[ymin,ymax,dgrad],Range[xmin,xmax,dgrad]];
+grid = Replace[Replace[array,Dispatch[Thread[pts -> vel]],{2}],{__Integer}->{None,None},{2}];
+ux = grad[Unevaluated[x],grid[[All,All,2]],dgrad];
+vx = grad[Unevaluated[x],grid[[All,All,1]],dgrad];
+uy = grad[Unevaluated[y],grid[[All,All,2]],dgrad];
+vy = grad[Unevaluated[y],grid[[All,All,1]],dgrad];
+DVxx = ux;
+DVyx = DVxy =(uy+vx)/2;
+DVyy = vy;
+DVww = (-uy+vx); (*rotation*)
+trace = (DVxx+DVyy)/2;
+Print[MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/. None -> 0)];
+{DVxx,DVyy,DVyx,DVxy,DVww,trace,array}
+];
+
+
+(* ::Section:: *)
+(*Strain Rate Measures*)
 
 
 SetAttributes[makeVecs,HoldAll];
@@ -322,7 +324,6 @@ makeVecs[ev,rv,1,rQ];{ev,rv}]
 
 SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},
 pos,DV,eVa,eVe,vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
-
 pos=SparseArray[(DVxx*DVyy*DVxy)/.None->0]["NonzeroPositions"];
 
 Do[
@@ -350,12 +351,12 @@ Block[{prim},
  RotationTransform[\[Phi],array[[Sequence@@i]]] ];
 
  If[Tracee>0,
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.33]]],
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.33]]]
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.65]]],
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.65]]]
 ];
 
- AppendTo[graphicsPrimitive, {GrayLevel[0.1],
-  GeometricTransformation[ Circle[array[[Sequence@@i]],{Round[scale2*maxDv],Round[Abs[scale2*minDv]]}],
+ AppendTo[graphicsPrimitive, {GrayLevel[0.2],
+  GeometricTransformation[Circle[array[[Sequence@@i]],{Round[scale2*maxDv],Round[Abs[scale2*minDv]]}],
  RotationTransform[\[Phi],array[[Sequence@@i]]]]}]
   ]
  ]
@@ -397,7 +398,7 @@ pickprimsOrig=Quiet@With[{reg=ConvexHullMesh@flowfield[[All,1]]},
 Pick[pickprimsOrig,(Or@@RegionMember[reg,RandomPoint[#,200]]&/@Cases[pickprims,Circle[_,{_,_}],{3}]),True]
 ];
 
-plt=Image[ImageRotate[
+plt = Image[ImageRotate[
 Rasterize[Show[
 ImageRotate[ImageAdjust@image,Pi/2],
 Graphics[If[FreeQ[#,0,\[Infinity]],{Thick,#},{Thickness[linethickness],#}]&/@pickprimsOrig],
@@ -406,8 +407,8 @@ ListVectorPlot[flowfield,VectorColorFunction->"Rainbow",VectorPoints->Fine,
 RegionFunction->Function[{x,y,xu,yv},RegionMember[reg,{x,y}]],VectorScale->vecscale]
 ],
 Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0},
-{-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
-ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],
+{-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],
+Arrow[{pt,(pt+arrowstretch*dir)}]}],ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],
 ImageSize->imgsize]
 ];
 plt
