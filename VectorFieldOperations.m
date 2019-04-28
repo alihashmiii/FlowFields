@@ -125,8 +125,8 @@ Block[{prim},
  RotationTransform[\[Phi],array[[Sequence@@i]]] ];
 
  If[Tracee>0,
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.65]]],
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.65]]]
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.5]]],
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.6]]]
 ];
 
  AppendTo[graphicsPrimitive, {GrayLevel[0.2],
