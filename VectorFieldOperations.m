@@ -54,7 +54,8 @@ DVyx = DVxy =(uy+vx)/2;
 DVyy = vy;
 DVww = (-uy+vx); (*rotation*)
 trace = (DVxx+DVyy)/2;
-Print[MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/. None -> 0)];
+Print@Thread[{"xx","yy","yx","xy","ww","trace"}->
+(MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/.None-> 0))];
 {DVxx,DVyy,DVyx,DVxy,DVww,trace,array}
 ];
 
@@ -98,11 +99,11 @@ makeVecs[ev,rv,1,rQ];{ev,rv}]
 
 SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,
 vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
-pos=SparseArray[(DVxx*DVyy*DVxy)/.None->0]["NonzeroPositions"];
 
+pos=SparseArray[(DVxx*DVyy*DVxy)/.None -> 0]["NonzeroPositions"];
 Do[
-DV={{(DVxx[[Sequence@@i]]-DVyy[[Sequence@@i]])/2,DVxy[[Sequence@@i]]},
-{DVxy[[Sequence@@i]],-(DVxx[[Sequence@@i]]-DVyy[[Sequence@@i]])/2}};
+DV={{(DVxx[[Sequence@@i]]-DVyy[[Sequence@@i]])/2, DVxy[[Sequence@@i]]},
+{DVxy[[Sequence@@i]], -(DVxx[[Sequence@@i]]-DVyy[[Sequence@@i]])/2}};
 
 If[FreeQ[DV,None],
 {eVa,eVe}={DiagonalMatrix@#[[1]],#[[2]]\[Transpose]}&[Re@getEigensystem[DV]];
@@ -110,11 +111,11 @@ vp1 = Diagonal[eVa];
 {val1,ind1}={Sort@vp1,Ordering@vp1};
 \[Phi] = ArcTan[eVe[[2,ind1[[2]] ]]/eVe[[1,ind1[[2]] ]]];
 rvect ={eVe[[1,ind1[[2]] ]],eVe[[2,ind1[[2]] ]]};
-speed=vectorfield[[All,2]];
+(*speed=vectorfield[[All,2]];
 anglevelmean = \[Theta]; (* angle from polarization code maybe used instead*)
 rotationTrans = RotationTransform[anglevelmean];
 rvectTurned = rotationTrans[rvect];
-scalar = Abs[First@rvectTurned];
+scalar = Abs[First@rvectTurned];*)
 minDv = eVa[[1,1]]~Min~eVa[[2,2]];
 maxDv = eVa[[1,1]]~Max~eVa[[2,2]];
 Tracee =(DVxx[[Sequence@@i]]+DVyy[[Sequence@@i]])/2;
@@ -165,11 +166,11 @@ If[trim,
 graphicsPrimitiveC=Replace[graphicsPrimitive, 
  HoldPattern[{t_,u_[Circle[v_,{w_Integer,0}],x_]}]:> {t,u[Circle[v,{w,1}],x]},{1}];
 cases=Cases[graphicsPrimitiveC,Circle[_,{_,_}],{3}];
-posprims=Position[Map[Length][Quiet@RandomPoint[#,200]&/@cases],x_/;x==200];
+posprims=Position[Map[Length][Quiet@RandomPoint[#,1000]&/@cases],x_/;x==1000];
 pickprims=Extract[graphicsPrimitiveC,posprims];
 pickprimsOrig=Extract[graphicsPrimitive,posprims];
 pickprimsOrig=Quiet@With[{reg=ConvexHullMesh@flowfield[[All,1]]},
-Pick[pickprimsOrig,(Or@@RegionMember[reg,RandomPoint[#,200]]&/@Cases[pickprims,Circle[_,{_,_}],{3}]),True]
+Pick[pickprimsOrig,(Or@@RegionMember[reg,RandomPoint[#,1000]]&/@Cases[pickprims,Circle[_,{_,_}],{3}]),True]
 ];
 
 plt=Image[ImageRotate[
@@ -181,8 +182,8 @@ ListVectorPlot[flowfield,VectorColorFunction->"Rainbow",VectorPoints->Fine,
 RegionFunction->Function[{x,y,xu,yv},RegionMember[reg,{x,y}]],VectorScale->vecscale]
 ],
 Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0},
-{-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
-ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],
+{-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],
+Arrow[{pt,(pt+arrowstretch*dir)}]}],ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],
 ImageSize->imgsize]
 ];
 plt

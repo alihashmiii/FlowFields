@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Build Image Pyramid*)
 
 
@@ -46,7 +46,7 @@ AppendTo[pyramidgradY,gradY],{i,level}];
 ];
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Pyramidal LK*)
 
 
@@ -66,10 +66,19 @@ interp
 ];
 
 
-pyrLK::description="pyrLK tracks 'features' from images in pyr1 to pyr2 (pyramids). features contains the features to track.
-winsize is the size of the window to estimate local gradient. We iterate at most maxIter for each pyramid level or halt if
-convergence criteria is met i.e. < some limit (in pixels)";
+pyrLK::description="pyrLK tracks'features' from images in pyr1 to pyr2. pt0 contains the features to track. winsize is the size
+of the window to estimate local gradient. iterate at most maxIter times per pyramid level or stop if convergence is less than 
+the stop threshold (in pixels). winsize, maxiter and threshold can be scalars or vectors with a different value for each pyramid
+level.
 
+Output:
+speed -> estimated speed of features (in lower pyramid image)
+failure -> tracking failure
+error -> final difference of pixel color.
+
+'failure' is an array containing 2 counts of failures for each particle. The first is the number of times LK has failed due to a
+weak gradient of color intensity in the area around the features. The second is the number of times it has been tracked out of the
+image and forced back inside, or lost due to algorithmic failure (this should not happen anymore, otherwise warnings are displayed)";
 pyrLK[{pyr1_,pyr1x_,pyr1y_},{pyr2_,pyr2x_,pyr2y_},mask_,features_,winsize_:5,maxIter_:2,threshold_:0.5]:=Block[{pyrNum,
 windowSize=winsize,thresh=threshold,maxiter=maxIter,pts0=features,pts,sp,ds,warn,img1,img2,Px,Py,count,r,ldspl,Sdsp,feature,
 featureNa,featureNb,A,a,B,b,dsp,II,revdsp,ind,ind2,dsval,dim,interpFuncX,interpFuncY,mesh,ptsToForceBack,meshg,nearestFunc,
@@ -166,7 +175,7 @@ Options[KLTracker]= {"dgrid" -> 8, "threshold" -> 0.99, "windowFilter" -> 30, "p
 
 
 KLTracker[images_,imagedata_,images_,masks_,istart_,iend_,dt_,OptionsPattern[]]:= Block[{index,time,nX,nY,img,
-y,x,xeul,yeul,indexpoints,mask,boxmeanvals,pyr1,pyr1X,pyr1Y,pyr2,pyr2X,pyr2Y,ptsToTrack,sol,warn,lenImages = Length@images,
+y,x,mask,gridpts,boxmeanvals,pyr1,pyr1X,pyr1Y,pyr2,pyr2X,pyr2Y,ptsToTrack,sol,warn,lenImages = Length@images,
 winSize=OptionValue["winSize"],dgrid=OptionValue["dgrid"],windowFilter=OptionValue["windowFilter"],
 threshold=OptionValue["threshold"],pyramidNum=OptionValue["pyramidNum"],blurRadius=OptionValue["blurRadius"],
 kthreshold=OptionValue["kthreshold"],maxIterations=OptionValue["maxIterations"]},
@@ -180,40 +189,32 @@ time[[index]]=i;
 
 If[i==istart,
 img=images[[i]];
-With[{p=Range[winSize[[i]],nX-winSize[[i]],dgrid]},
-x=Array[p&,Length[p]]
-];
-With[{p=Range[winSize[[i]],nY-winSize[[i]],dgrid]},
-y=Transpose@Array[p&,Length[p]]
-];
-With[{dim=Times@@Dimensions[x]},
-xeul=ArrayReshape[x,dim];
-yeul=ArrayReshape[y,dim];
-indexpoints=ConstantArray[None,{dim,lenImages}]
-];
+x=Range[winSize[[i]],nX-winSize[[i]],dgrid];
+y=Range[winSize[[i]],nY-winSize[[i]],dgrid];
+gridpts=Flatten[meshgrid[x,y],1];
 ];
 
-img=images[[i]]; mask=masks[[i]];
+img=images[[i]];mask=masks[[i]];
+
 With[{filtsize=Round[windowFilter/2]},
 boxmeanvals=ParallelTable[
-Mean@ImageTake[mask,{xeul[[j]]-filtsize,xeul[[j]]+filtsize},
-{yeul[[j]]-filtsize,yeul[[j]]+filtsize}],
-{j,Length@xeul}]
+Mean@ImageTake[mask,{pt[[2]]-filtsize,pt[[2]]+filtsize},
+{pt[[1]]-filtsize,pt[[1]]+filtsize}],
+{pt,gridpts}]
 ];
-indexpoints[[All,i]] = Boole[Thread[boxmeanvals>threshold]];
 (* pts to track *)
-ptsToTrack = Thread[{Extract[xeul,#],Extract[yeul,#]}]&[Position[indexpoints[[All,i]],1]];
+ptsToTrack=Reverse[Pick[gridpts,Boole[Thread[boxmeanvals>threshold]],1],2];
 (* create image pyramid for the first image *)
-{pyr1,pyr1X,pyr1Y} = makePyramid[imagedata[[i]],pyramidNum,blurRadius];
-{pyr2,pyr2X,pyr2Y} = makePyramid[imagedata[[i+dt]],pyramidNum,blurRadius];
-{sol,warn} = pyrLK[{pyr1,pyr1X,pyr1Y},{pyr2,pyr2X,pyr2Y},masks[[i]],ptsToTrack,winSize,maxIterations,kthreshold];
+{pyr1,pyr1X,pyr1Y}=makePyramid[imagedata[[i]],2,1];
+{pyr2,pyr2X,pyr2Y}=makePyramid[imagedata[[i+dt]],2,1];
+{sol,warn}=pyrLK[{pyr1,pyr1X,pyr1Y},{pyr2,pyr2X,pyr2Y},masks[[i]],ptsToTrack,winSize,maxIterations,kthreshold];
 warn=Total/@warn;
 sol=sol/dt;
 Sow[{ptsToTrack,sol}],{i,istart,iend-dt}]
 ];
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Misc F(x)*)
 
 
@@ -225,7 +226,7 @@ movingAvgFlowField[flowfield_,block_:5,trans_:1]:=BlockMap[
 flowfield,block,trans];
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Plot F(x)*)
 
 
