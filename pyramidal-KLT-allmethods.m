@@ -164,9 +164,8 @@ On[InterpolatingFunction::dmval];
 Options[KLTracker]= {"dgrid" -> 8, "threshold" -> 0.99, "windowFilter" -> 30, "pyramidNum" -> 2, "winSize" -> {20,20},
 "maxIterations" -> {10,10}, "kthreshold" -> {0.05,0.05}, "blurRadius" -> 1};
 
-
 KLTracker[images_,imagedata_,images_,masks_,istart_,iend_,dt_,OptionsPattern[]]:= Block[{index,time,nX,nY,img,
-y,x,xeul,yeul,indexpoints,mask,boxmeanvals,pyr1,pyr1X,pyr1Y,pyr2,pyr2X,pyr2Y,ptsToTrack,sol,warn,lenImages = Length@images,
+y,x,mask,gridpts,boxmeanvals,pyr1,pyr1X,pyr1Y,pyr2,pyr2X,pyr2Y,ptsToTrack,sol,warn,lenImages = Length@images,
 winSize=OptionValue["winSize"],dgrid=OptionValue["dgrid"],windowFilter=OptionValue["windowFilter"],
 threshold=OptionValue["threshold"],pyramidNum=OptionValue["pyramidNum"],blurRadius=OptionValue["blurRadius"],
 kthreshold=OptionValue["kthreshold"],maxIterations=OptionValue["maxIterations"]},
@@ -180,38 +179,29 @@ time[[index]]=i;
 
 If[i==istart,
 img=images[[i]];
-With[{p=Range[winSize[[i]],nX-winSize[[i]],dgrid]},
-x=Array[p&,Length[p]]
-];
-With[{p=Range[winSize[[i]],nY-winSize[[i]],dgrid]},
-y=Transpose@Array[p&,Length[p]]
-];
-With[{dim=Times@@Dimensions[x]},
-xeul=ArrayReshape[x,dim];
-yeul=ArrayReshape[y,dim];
-indexpoints=ConstantArray[None,{dim,lenImages}]
-];
+x=Range[winSize[[i]],nX-winSize[[i]],dgrid];
+y=Range[winSize[[i]],nY-winSize[[i]],dgrid];
+gridpts=Flatten[meshgrid[x,y],1];
 ];
 
-img=images[[i]]; mask=masks[[i]];
+img=images[[i]];mask=masks[[i]];
+
 With[{filtsize=Round[windowFilter/2]},
 boxmeanvals=ParallelTable[
-Mean@ImageTake[mask,{xeul[[j]]-filtsize,xeul[[j]]+filtsize},
-{yeul[[j]]-filtsize,yeul[[j]]+filtsize}],
-{j,Length@xeul}]
+Mean@ImageTake[mask,{pt[[2]]-filtsize,pt[[2]]+filtsize},
+{pt[[1]]-filtsize,pt[[1]]+filtsize}],
+{pt,gridpts}]
 ];
-indexpoints[[All,i]] = Boole[Thread[boxmeanvals>threshold]];
 (* pts to track *)
-ptsToTrack = Thread[{Extract[xeul,#],Extract[yeul,#]}]&[Position[indexpoints[[All,i]],1]];
+ptsToTrack=Reverse[Pick[gridpts,Boole[Thread[boxmeanvals>threshold]],1],2];
 (* create image pyramid for the first image *)
-{pyr1,pyr1X,pyr1Y} = makePyramid[imagedata[[i]],pyramidNum,blurRadius];
-{pyr2,pyr2X,pyr2Y} = makePyramid[imagedata[[i+dt]],pyramidNum,blurRadius];
-{sol,warn} = pyrLK[{pyr1,pyr1X,pyr1Y},{pyr2,pyr2X,pyr2Y},masks[[i]],ptsToTrack,winSize,maxIterations,kthreshold];
+{pyr1,pyr1X,pyr1Y}=makePyramid[imagedata[[i]],2,1];
+{pyr2,pyr2X,pyr2Y}=makePyramid[imagedata[[i+dt]],2,1];
+{sol,warn}=pyrLK[{pyr1,pyr1X,pyr1Y},{pyr2,pyr2X,pyr2Y},masks[[i]],ptsToTrack,winSize,maxIterations,kthreshold];
 warn=Total/@warn;
 sol=sol/dt;
 Sow[{ptsToTrack,sol}],{i,istart,iend-dt}]
 ];
-
 
 (* ::Section::Closed:: *)
 (*Misc F(x)*)
