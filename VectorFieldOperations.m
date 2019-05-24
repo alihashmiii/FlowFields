@@ -105,9 +105,9 @@ Line[Abs[{0,imgdim}-{##}]&@@@Thread[{xmaj {-1,1}+x0,ymaj {-1,1}+y0}]]
 ];
 
 
-SRMeasures[img_,flow_,DVxx_,DVyy_,DVxy_,array_,scale_:500]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,
-vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee,ptsTransfer,err,transFnPts,pts,
-transVec,meanflowRot,imgdim=Last@ImageDimensions[img],pt,dir,\[Theta],vel},
+SRMeasures[img_,flow_,DVxx_,DVyy_,DVxy_,array_,scale_:500]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,vp1,val1,
+ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee,ptsTransfer,err,transFnPts,
+pts,transVec,meanflowRot,imgdim=Last@ImageDimensions[img],pt,dir,\[Theta],vel},
 
 pos = SparseArray[(DVxx*DVyy*DVxy)/. None -> 0]["NonzeroPositions"];
 {pts,vel} = {flow[[All,1]],flow[[All,-1]]};
@@ -160,7 +160,7 @@ meanflowRot=Thread[{ptsTransfer,transVec[#]&/@vel}];
 (*Plotting F(x)s*)
 
 
-(*plot the vector field along with the strain rates *)
+(*plot vector field as streamlines *)
 plotStreamField[flowfield_,image_,vecscale_:{0.075,0.30},imgres_:500,imgsize_:500,
 arrowstretch_:200,arrowheadsize_:0.035]:=
 Module[{pt,dir},
