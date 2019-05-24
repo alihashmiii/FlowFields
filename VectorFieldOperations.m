@@ -161,8 +161,8 @@ meanflowRot=Thread[{ptsTransfer,transVec[#]&/@vel}];
 
 
 (*plot the vector field along with the strain rates *)
-plotStreamField[graphicsPrimitive_,flowfield_,image_,vecscale_:{0.075,0.30},imgres_:500,
-imgsize_:500,arrowstretch_:200,arrowheadsize_:0.035]:=
+plotStreamField[flowfield_,image_,vecscale_:{0.075,0.30},imgres_:500,imgsize_:500,
+arrowstretch_:200,arrowheadsize_:0.035]:=
 Module[{pt,dir},
 {pt,dir}=Mean/@{N@flowfield[[All,1]],flowfield[[All,2]]};
 Image[Rasterize[Show[
@@ -178,9 +178,9 @@ ImageSize->imgsize]
 ];
 
 
-(*plot the vector field along with the strain rates *)
-plotSRField[graphicsPrimitive_,flowfield_,image_,
-imgres_:500,imgsize_:500,arrowstretch_:200,arrowheadsize_:0.035]:=
+(* plot strain rate *)
+plotSRField[graphicsPrimitive_,flowfield_,image_,imgres_:500,imgsize_:500,
+arrowstretch_:200,arrowheadsize_:0.035]:=
 Module[{pt,dir,graphicsPrimitiveC,cases,posprims,pickprims,pickprimsOrig,plt},
 {pt,dir}=Mean/@{N@flowfield[[All,1]],flowfield[[All,2]]};
 Image[
