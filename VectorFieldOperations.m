@@ -44,18 +44,18 @@ ux,vx,uy,vy,DVxx,DVyx,DVxy,DVyy,DVww,trace},
 {ymin,ymax}=MinMax@pts[[All,1]];
 {xmin,xmax}=MinMax@pts[[All,2]];
 array = meshgrid[Range[ymin,ymax,dgrad],Range[xmin,xmax,dgrad]];
-grid = Replace[Replace[array,Dispatch[Thread[pts -> vel]],{2}],{__Integer}->{None,None},{2}];
+grid = Replace[Replace[array,Dispatch[Thread[pts->vel]],{2}],{__Integer}->{None,None},{2}];
 ux = grad[Unevaluated[x],grid[[All,All,2]],dgrad];
 vx = grad[Unevaluated[x],grid[[All,All,1]],dgrad];
 uy = grad[Unevaluated[y],grid[[All,All,2]],dgrad];
 vy = grad[Unevaluated[y],grid[[All,All,1]],dgrad];
-DVxx = ux;
+DVxx = (ux);
 DVyx = DVxy =(uy+vx)/2;
-DVyy = vy;
+DVyy = (vy);
 DVww = (-uy+vx); (*rotation*)
 trace = (DVxx+DVyy)/2;
 Print@Thread[{"xx","yy","yx","xy","ww","trace"}->
-(MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/.None-> 0))];
+(MatrixPlot[#,ColorFunction->"Rainbow",ColorRules->{0->Black}]&/@({DVxx,DVyy,DVyx,DVxy,DVww,trace}/. None->0))];
 {DVxx,DVyy,DVyx,DVxy,DVww,trace,array}
 ];
 
@@ -97,94 +97,96 @@ makeVecs[ev,rv,1,rQ];{ev,rv}]
 ];
 
 
-SRMeasures[DVxx_,DVyy_,DVxy_,vectorfield_,array_,\[Theta]_:45 Degree,scale1_:1000,scale2_:360]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,
-vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee},
+plotbars[pt_,\[Phi]_,eigval_,scale_,inds_,imgdim_]:=Module[{Amp,x0,y0,xmaj,ymaj},
+Amp=scale Abs[eigval];
+{y0,x0}=pt;
+{xmaj,ymaj}=Amp Through[{Cos,Sin}[\[Phi]]];
+Line[Abs[{0,imgdim}-{##}]&@@@Thread[{xmaj {-1,1}+x0,ymaj {-1,1}+y0}]]
+];
 
-pos=SparseArray[(DVxx*DVyy*DVxy)/.None -> 0]["NonzeroPositions"];
+
+SRMeasures[img_,flow_,DVxx_,DVyy_,DVxy_,array_,scale_:500]:=Module[{graphicsPrimitive={},pos,DV,eVa,eVe,
+vp1,val1,ind1,\[Phi],rvect,speed,anglevelmean,rotationTrans,rvectTurned,scalar,minDv,maxDv,Tracee,ptsTransfer,err,transFnPts,pts,
+transVec,meanflowRot,imgdim=Last@ImageDimensions[img],pt,dir,\[Theta],vel},
+
+pos = SparseArray[(DVxx*DVyy*DVxy)/. None -> 0]["NonzeroPositions"];
+{pts,vel} = {flow[[All,1]],flow[[All,-1]]};
+ptsTransfer = {#[[2]],imgdim-#[[1]]}&/@pts;
+{err,transFnPts}=FindGeometricTransform[ptsTransfer,pts];
+{pt,dir}=Mean/@{N@pts,vel};
+\[Theta]=(ArcTan[#[[2]]/#[[1]]]&[dir]);
 Do[
 DV={{(DVxx[[Sequence@@i]]-DVyy[[Sequence@@i]])/2, DVxy[[Sequence@@i]]},
 {DVxy[[Sequence@@i]], -(DVxx[[Sequence@@i]]-DVyy[[Sequence@@i]])/2}};
-
 If[FreeQ[DV,None],
-{eVa,eVe}={DiagonalMatrix@#[[1]],#[[2]]\[Transpose]}&[Re@getEigensystem[DV]];
+{eVa,eVe}={DiagonalMatrix[Reverse@#[[1]]],Reverse[-#[[2]]]}&[Re@getEigensystem[DV]];
+(*{eVa,eVe}={DiagonalMatrix[#[[1]]],#[[2]]}&@Eigensystem[DV];*)
 vp1 = Diagonal[eVa];
 {val1,ind1}={Sort@vp1,Ordering@vp1};
 \[Phi] = ArcTan[eVe[[2,ind1[[2]] ]]/eVe[[1,ind1[[2]] ]]];
 rvect ={eVe[[1,ind1[[2]] ]],eVe[[2,ind1[[2]] ]]};
-(*speed=vectorfield[[All,2]];
-anglevelmean = \[Theta]; (* angle from polarization code maybe used instead*)
-rotationTrans = RotationTransform[anglevelmean];
-rvectTurned = rotationTrans[rvect];
-scalar = Abs[First@rvectTurned];*)
-minDv = eVa[[1,1]]~Min~eVa[[2,2]];
-maxDv = eVa[[1,1]]~Max~eVa[[2,2]];
+
+rotationTrans=RotationTransform[\[Theta]];
+rvectTurned=rotationTrans[rvect];
+scalar=Abs[First@rvectTurned];
+
+{minDv,maxDv} = MinMax[eVa];
 Tracee =(DVxx[[Sequence@@i]]+DVyy[[Sequence@@i]])/2;
 
-Block[{prim},
+Block[{prim,transpt=transFnPts@array[[Sequence@@i]]},
  If[Abs[minDv]*Abs[maxDv]>0,
- prim = GeometricTransformation[Circle[array[[Sequence@@i]],{Round[scale1 Abs[Tracee]],0}],
- RotationTransform[\[Phi],array[[Sequence@@i]]] ];
+ prim = GeometricTransformation[Circle[transpt,
+ {Round[scale Abs[Tracee]],Round[scale Abs[Tracee]]}],
+ RotationTransform[\[Phi],transpt]];
 
  If[Tracee>0,
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.5]]],
- AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.6]]]
+ (*isotropic strain-rate*)
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[1,0,0,0.5]]],
+ AppendTo[graphicsPrimitive, Prepend[{prim},XYZColor[0,0,1,0.5]]]
 ];
-
- AppendTo[graphicsPrimitive, {GrayLevel[0.2],
-  GeometricTransformation[Circle[array[[Sequence@@i]],{Round[scale2*maxDv],Round[Abs[scale2*minDv]]}],
- RotationTransform[\[Phi],array[[Sequence@@i]]]]}]
+(*anisotropic strain-rate*)
+ AppendTo[graphicsPrimitive,{ColorData["CandyColors"][scalar],Thickness[0.005],
+ plotbars[array[[Sequence@@i]],\[Phi],maxDv,scale,i,imgdim]}]
   ]
  ]
 ],{i,pos}];
-graphicsPrimitive
+transVec=TransformationFunction[ReplacePart[Chop@transFnPts[[1]],{2,3}-> 0]];
+meanflowRot=Thread[{ptsTransfer,transVec[#]&/@vel}];
+{graphicsPrimitive,meanflowRot}
 ];
 
 
 (* ::Section:: *)
-(*Plot F(x)*)
+(*Plotting F(x)s*)
 
 
 (*plot the vector field along with the strain rates *)
-plotVectorFieldSR[graphicsPrimitive_,flowfield_,image_,trim_:True,linethickness_:0.006,
-vecscale_:{0.075,0.30},imgres_:500,imgsize_:500,arrowstretch_:200,arrowheadsize_:0.025]:=
-Module[{pt,dir,graphicsPrimitiveC,cases,posprims,pickprims,pickprimsOrig,plt},
+plotStreamField[graphicsPrimitive_,flowfield_,image_,vecscale_:{0.075,0.30},imgres_:500,
+imgsize_:500,arrowstretch_:200,arrowheadsize_:0.035]:=
+Module[{pt,dir},
 {pt,dir}=Mean/@{N@flowfield[[All,1]],flowfield[[All,2]]};
-
-plt = Image[ImageRotate[
-Rasterize[Show[
-ImageRotate[ImageAdjust@image, Pi/2],
-Graphics[If[FreeQ[#,0,\[Infinity]],{Thick,#},{Thickness[linethickness],#}]&/@graphicsPrimitive],
+Image[Rasterize[Show[
+ImageAdjust@image,
 With[{reg=ConvexHullMesh@flowfield[[All,1]]},
-ListVectorPlot[flowfield,VectorColorFunction->"Rainbow",VectorPoints->Fine,
-RegionFunction->Function[{x,y,xu,yv},RegionMember[reg,{x,y}]],VectorScale->vecscale]
-],
-Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0},
-{-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
-ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],ImageSize->imgsize];
-
-If[trim,
-graphicsPrimitiveC=Replace[graphicsPrimitive, 
- HoldPattern[{t_,u_[Circle[v_,{w_Integer,0}],x_]}]:> {t,u[Circle[v,{w,1}],x]},{1}];
-cases=Cases[graphicsPrimitiveC,Circle[_,{_,_}],{3}];
-posprims=Position[Map[Length][Quiet@RandomPoint[#,1000]&/@cases],x_/;x==1000];
-pickprims=Extract[graphicsPrimitiveC,posprims];
-pickprimsOrig=Extract[graphicsPrimitive,posprims];
-pickprimsOrig=Quiet@With[{reg=ConvexHullMesh@flowfield[[All,1]]},
-Pick[pickprimsOrig,(Or@@RegionMember[reg,RandomPoint[#,1000]]&/@Cases[pickprims,Circle[_,{_,_}],{3}]),True]
-];
-
-plt=Image[ImageRotate[
-Rasterize[Show[
-ImageRotate[ImageAdjust@image,Pi/2],
-Graphics[If[FreeQ[#,0,\[Infinity]],{Thick,#},{Thickness[linethickness],#}]&/@pickprimsOrig],
-With[{reg=ConvexHullMesh@flowfield[[All,1]]},
-ListVectorPlot[flowfield,VectorColorFunction->"Rainbow",VectorPoints->Fine,
-RegionFunction->Function[{x,y,xu,yv},RegionMember[reg,{x,y}]],VectorScale->vecscale]
-],
-Graphics[{GrayLevel[0.25],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0},
-{-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],
-Arrow[{pt,(pt+arrowstretch*dir)}]}],ImageSize->Large],"Image",ImageResolution->imgres],-Pi/2],
+ListStreamPlot[flowfield,StreamColorFunction->"Rainbow",StreamPoints->Fine,
+RegionFunction->Function[{x,y,xu,yv},RegionMember[reg,{x,y}]],StreamScale->vecscale]
+], 
+Graphics[{GrayLevel[0.],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0}, {-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch*dir)}]}],
+ImageSize->Large],"Image",ImageResolution->imgres],
 ImageSize->imgsize]
 ];
-plt
+
+
+(*plot the vector field along with the strain rates *)
+plotSRField[graphicsPrimitive_,flowfield_,image_,
+imgres_:500,imgsize_:500,arrowstretch_:200,arrowheadsize_:0.035]:=
+Module[{pt,dir,graphicsPrimitiveC,cases,posprims,pickprims,pickprimsOrig,plt},
+{pt,dir}=Mean/@{N@flowfield[[All,1]],flowfield[[All,2]]};
+Image[
+Rasterize[Show[
+ImageAdjust@image,
+Graphics[If[!FreeQ[#,0,\[Infinity]],{Thick,#},{Thin,#}]&/@graphicsPrimitive],
+Graphics[{GrayLevel[0],Thick,Arrowheads[{{arrowheadsize,1,{Graphics[Line[{{-1, Rational[1, 2]}, {0, 0}, {-1, Rational[-1, 2]}, {-1, Rational[1, 2]}}], ImageSize -> {27.60000000000103, Automatic}],1}}}],Arrow[{pt,(pt+arrowstretch dir)}]}],
+ImageSize->Large],"Image",ImageResolution->imgres],
+ImageSize->imgsize]
 ];
