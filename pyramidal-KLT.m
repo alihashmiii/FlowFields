@@ -10,11 +10,8 @@ conv2[A_,B_]:=ListConvolve[A,B,{1,-1},0];
 
 
 (* 
-'image' should be a 2D array (i.e. gray); 'level_number' is the number of level of the output pyramid;
-    'blurRadius' \[Rule] convolve pyramid images by a blur radius 
-OUTPUT: image of pyramid at level i (starting at 1, not 0 as in [Bouguet 2002])
-             gradX is the x gradient of image pyramid;
-             gradY is the y gradient of image pyramid;
+'level' is the number of level of the output pyramid; 'blurRadius' \[Rule] convolve pyramid images by a blur radius 
+As output we get pyramids at level i (as in [Bouguet 2002]) and gradient Images.
 *)
 makePyramid[image_,level_Integer,blurRadius_]:=Module[{filter,F,imdata,ind0x,ind0y,ind1x,ind1y,
 ind2x,ind2y,simg,pyramid,pyramidgradX,pyramidgradY,gradX,gradY,sx,sy},
