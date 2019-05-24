@@ -9,6 +9,13 @@ conv2[A_?VectorQ,B_]:=conv2[{A},B];
 conv2[A_,B_]:=ListConvolve[A,B,{1,-1},0];
 
 
+(* 
+'image' should be a 2D array (i.e. gray); 'level_number' is the number of level of the output pyramid;
+    'blurRadius' \[Rule] convolve pyramid images by a blur radius 
+OUTPUT: image of pyramid at level i (starting at 1, not 0 as in [Bouguet 2002])
+             gradX is the x gradient of image pyramid;
+             gradY is the y gradient of image pyramid;
+*)
 makePyramid[image_,level_Integer,blurRadius_]:=Module[{filter,F,imdata,ind0x,ind0y,ind1x,ind1y,
 ind2x,ind2y,simg,pyramid,pyramidgradX,pyramidgradY,gradX,gradY,sx,sy},
 pyramid=pyramidgradX=pyramidgradY={};
@@ -66,19 +73,9 @@ interp
 ];
 
 
-pyrLK::description="pyrLK tracks'features' from images in pyr1 to pyr2. pt0 contains the features to track. winsize is the size
-of the window to estimate local gradient. iterate at most maxIter times per pyramid level or stop if convergence is less than 
-the stop threshold (in pixels). winsize, maxiter and threshold can be scalars or vectors with a different value for each pyramid
-level.
-
-Output:
-speed -> estimated speed of features (in lower pyramid image)
-failure -> tracking failure
-error -> final difference of pixel color.
-
-'failure' is an array containing 2 counts of failures for each particle. The first is the number of times LK has failed due to a
-weak gradient of color intensity in the area around the features. The second is the number of times it has been tracked out of the
-image and forced back inside, or lost due to algorithmic failure (this should not happen anymore, otherwise warnings are displayed)";
+pyrLK::description="pyrLK tracks 'features' from images in pyr1 to pyr2. features contains the pts to track. winsize is the
+size of the window to estimate local gradient. We iterate at most maxIter times for each pyramid or stop if convergence
+criteria is met i.e. < some limit (in pixels)";
 pyrLK[{pyr1_,pyr1x_,pyr1y_},{pyr2_,pyr2x_,pyr2y_},mask_,features_,winsize_:5,maxIter_:2,threshold_:0.5]:=Block[{pyrNum,
 windowSize=winsize,thresh=threshold,maxiter=maxIter,pts0=features,pts,sp,ds,warn,img1,img2,Px,Py,count,r,ldspl,Sdsp,feature,
 featureNa,featureNb,A,a,B,b,dsp,II,revdsp,ind,ind2,dsval,dim,interpFuncX,interpFuncY,mesh,ptsToForceBack,meshg,nearestFunc,
@@ -94,9 +91,9 @@ If[Length[maxiter]<pyrNum,
 maxiter=ConstantArray[maxiter,pyrNum-Length[threshold]]];
 (*initialze some var: sp \[Rule] (displacement/speed) of features & ds \[Rule] radius of neighbourhood *)
 If[Last@Dimensions[pts0]>= 4,
- sp = pts0[[All,3;;4]] /(2^pyrNum);
-pts0=pts0[[All,1;;2]],
-sp=ConstantArray[0,{First[Dimensions@pts0],2}]
+ sp = pts0[[All,3;;4]]/(2^pyrNum);
+ pts0 = pts0[[All,1;;2]],
+ sp = ConstantArray[0,{First[Dimensions@pts0],2}]
 ];
 ds = Floor[windowSize/2];
 windowSize=2 ds + 1;
@@ -148,7 +145,7 @@ ind=Position[sp,x_/;x<(-pts+dsval),{2}];
 Scan[(sp[[Sequence@@#]]=-pts[[Sequence@@#]]+dsval)&,ind];
 ind=ind[[All,1]];
 (*higher clamp*)
-sp=sp + pts;
+sp = sp+pts;
 ind2=Position[sp[[All,1]],x_/;x>(First[Dimensions@img1]-dsval),{2}];
 ind2=Thread[{Flatten@ind2,1}];
 sp=ReplacePart[sp,ind2->First[Dimensions@img1]-dsval];
@@ -157,7 +154,7 @@ ind=Union[ind,ind2];
 ind2=Position[sp[[All,2]],x_/;x>(Last[Dimensions@img1]-dsval),{2}];
 ind2=Thread[{ind2,2}];
 sp=ReplacePart[sp,ind2->Last[Dimensions@img1]-dsval];
-sp=sp - pts;
+sp = sp-pts;
 ind2=ind2[[All,1]];
 ind=Union[ind,ind2];
 Scan[(warn[[Sequence@@#]]+=1)&,Thread[{ind,2}]],{i,pyrNum,1,-1}];
@@ -166,7 +163,7 @@ On[InterpolatingFunction::dmval];
 ];
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Main *)
 
 
@@ -194,7 +191,7 @@ y=Range[winSize[[i]],nY-winSize[[i]],dgrid];
 gridpts=Flatten[meshgrid[x,y],1];
 ];
 
-img=images[[i]];mask=masks[[i]];
+img=images[[i]]; mask=masks[[i]];
 
 With[{filtsize=Round[windowFilter/2]},
 boxmeanvals=ParallelTable[
@@ -226,7 +223,7 @@ movingAvgFlowField[flowfield_,block_:5,trans_:1]:=BlockMap[
 flowfield,block,trans];
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Plot F(x)*)
 
 
