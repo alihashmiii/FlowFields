@@ -168,7 +168,7 @@ Options[KLTracker]= {"dgrid" -> 8, "threshold" -> 0.99, "windowFilter" -> 30, "p
 "maxIterations" -> {10,10}, "kthreshold" -> {0.05,0.05}, "blurRadius" -> 1};
 
 
-KLTracker[images_,imagedata_,images_,masks_,istart_,iend_,dt_,OptionsPattern[]]:= Block[{index,time,nX,nY,img,
+KLTracker[images_,imagedata_,masks_,istart_,iend_,dt_,OptionsPattern[]]:= Block[{index,time,nX,nY,img,
 y,x,mask,gridpts,boxmeanvals,pyr1,pyr1X,pyr1Y,pyr2,pyr2X,pyr2Y,ptsToTrack,sol,warn,lenImages = Length@images,
 winSize=OptionValue["winSize"],dgrid=OptionValue["dgrid"],windowFilter=OptionValue["windowFilter"],
 threshold=OptionValue["threshold"],pyramidNum=OptionValue["pyramidNum"],blurRadius=OptionValue["blurRadius"],
