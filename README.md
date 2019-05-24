@@ -13,3 +13,5 @@ to obtain flow-field at a given instance using consecutive images. The features 
 `VectorFieldOperations.m` contains functions for computing velocity gradients and strain-rate from velocity-fields
 
 `pyramidal-KLT-allmethods.m` is a merger of the two script files
+
+![alt-text](https://github.com/alihashmiii/FlowFields/blob/master/for%20Readme/averagedflowfield.png)
