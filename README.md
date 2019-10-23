@@ -14,4 +14,4 @@ to obtain flow-field at a given instance using consecutive images. The features 
 
 `pyramidal-KLT-allmethods.m` is a merger of the two script files
 
-![alt-text](https://github.com/alihashmiii/FlowFields/blob/master/for%20Readme/averagedflowfield.png)
+![alt-text](https://github.com/alihashmiii/FlowFields/blob/master/for%20Readme/flow_upload_image_github.png)
